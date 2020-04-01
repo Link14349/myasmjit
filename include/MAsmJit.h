@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <initializer_list>
 #include <check-is-win.h>
 #ifdef I_OS_WIN32
@@ -109,6 +110,27 @@ namespace MAsmJit {
         }
         void clear() {
             machineCodeIndex = 0;
+        }
+        void resize(size_t size) {
+            auto tmp = machineCodeAdr;
+#ifdef I_OS_WIN32
+            machineCodeAdr = (uint8_t*)VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#else
+            machineCodeAdr = (uint8_t *) mmap(
+                    NULL,
+                    size,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_ANONYMOUS | MAP_PRIVATE,
+                    0,
+                    0);
+#endif
+            memcpy(machineCodeAdr, tmp, codeLength);
+#ifdef I_OS_WIN32
+            VirtualFree(tmp, 0, MEM_RELEASE);
+#else
+            munmap(tmp, codeLength);
+#endif
+            codeLength = size;
         }
         void reserve(size_t size) {
 #ifdef I_OS_WIN32
