@@ -10,5 +10,7 @@ int main(int argc, char *argv[]) {
     mAsmJit.clear();
     mAsmJit.db({ 0x48, 0x89, 0xd8 });
     mAsmJit.run();
+    mAsmJit.resize(128);
+    mAsmJit.run();
     return 0;
 }

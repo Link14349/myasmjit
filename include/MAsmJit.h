@@ -111,6 +111,12 @@ namespace MAsmJit {
         void clear() {
             machineCodeIndex = 0;
         }
+        void setIndex(size_t ci) {
+            machineCodeIndex = ci;
+        }
+        size_t getIndex() const {
+            return machineCodeIndex;
+        }
         void resize(size_t size) {
             auto tmp = machineCodeAdr;
 #ifdef I_OS_WIN32
