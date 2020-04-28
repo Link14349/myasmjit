@@ -96,10 +96,16 @@ namespace MAsmJit {
             func();
         }
         template <class Func>
-        decltype(auto) run_as(){
+        decltype(auto) run_as() {
             MAJ_APP = 0xc3;
             auto func = (Func*)machineCodeAdr;
             return func();
+        }
+        template <class Func, class ...Args>
+        decltype(auto) run_as(Args&& ...args) {
+            MAJ_APP = 0xc3;
+            auto func = (Func*)machineCodeAdr;
+            return func(std::forward<Args>(args)...);
         }
         void clear() {
             machineCodeIndex = 0;
