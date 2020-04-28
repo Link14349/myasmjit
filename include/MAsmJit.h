@@ -6,8 +6,7 @@
 #include <initializer_list>
 #include <check-is-win.h>
 #ifdef I_OS_WIN32
-#include "stdafx.h"
-#include "Windows.h"
+#include <Windows.h>
 #else
 #include <sys/mman.h>
 #endif
