@@ -30,7 +30,7 @@ namespace MAsmJit {
         typedef void (*JIT_FUNC)();
 
 #ifdef I_OS_WIN32
-        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((uint8_t*)VirtualAlloc(NULL, sizeof(codeLength), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((uint8_t*)VirtualAlloc(NULL, codeLength, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
 #else
         MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((uint8_t*) mmap(
                 NULL,
@@ -108,6 +108,22 @@ namespace MAsmJit {
             return func(std::forward<Args>(args)...);
         }
         void clear() {
+            machineCodeIndex = 0;
+        }
+        void reserve(size_t size) {
+#ifdef I_OS_WIN32
+            VirtualFree(machineCodeAdr, 0, MEM_RELEASE);
+            machineCodeAdr = (uint8_t*)VirtualAlloc(NULL, codeLength = size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#else
+            munmap(machineCodeAdr, codeLength);
+            machineCodeAdr = (uint8_t *) mmap(
+                    NULL,
+                    codeLength = size,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_ANONYMOUS | MAP_PRIVATE,
+                    0,
+                    0);
+#endif
             machineCodeIndex = 0;
         }
         ~MAsmJit() {
