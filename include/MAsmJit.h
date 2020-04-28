@@ -33,7 +33,7 @@ namespace MAsmJit {
 #ifdef I_OS_WIN32
         MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr(VirtualAlloc(NULL, sizeof(codeLength), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
 #else
-        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((char *) mmap(
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((unsigned char *) mmap(
                 NULL,
                 codeLength,
                 PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -109,7 +109,7 @@ namespace MAsmJit {
     private:
         size_t machineCodeIndex;
         size_t codeLength;
-        char *machineCodeAdr;
+        unsigned char *machineCodeAdr;
     };
 }
 
