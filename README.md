@@ -7,6 +7,7 @@ _A lightweight machine code dynamic executor written in C ++ based on x86 platfo
 - OS
     + OSX
     + Linux
+    + Windows
 
 # Usage
 ```cpp

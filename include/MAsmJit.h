@@ -4,7 +4,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <check-is-win.h>
+#ifndef I_OS_WIN32
 #include <sys/mman.h>
+#endif
 
 namespace MAsmJit {
     enum REG8BIT {
@@ -24,6 +27,9 @@ namespace MAsmJit {
 #define MAJ_APP machineCodeAdr[machineCodeIndex++]
         typedef void (*JIT_FUNC)();
 
+#ifdef I_OS_WIN32
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr(new char[codeLength]), machineCodeIndex(0) { }
+#else
         MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((char *) mmap(
                 NULL,
                 codeLength,
@@ -33,6 +39,7 @@ namespace MAsmJit {
                 0)), machineCodeIndex(0) {
 
         }
+#endif
 
 #define MAJ_APP_8(source) MAJ_APP = source;
 #define MAJ_APP_16(source) { MAJ_APP = source >> 8; \
@@ -89,7 +96,13 @@ namespace MAsmJit {
         void clear() {
             machineCodeIndex = 0;
         }
-        ~MAsmJit() { munmap(machineCodeAdr, codeLength); }
+        ~MAsmJit() {
+#ifdef I_OS_WIN32
+            delete[] machineCodeAdr;
+#else
+            munmap(machineCodeAdr, codeLength);
+#endif
+        }
     private:
         size_t machineCodeIndex;
         size_t codeLength;
