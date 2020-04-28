@@ -5,7 +5,10 @@
 #include <cstdint>
 #include <initializer_list>
 #include <check-is-win.h>
-#ifndef I_OS_WIN32
+#ifdef I_OS_WIN32
+#include "stdafx.h"
+#include "Windows.h"
+#else
 #include <sys/mman.h>
 #endif
 
@@ -28,7 +31,7 @@ namespace MAsmJit {
         typedef void (*JIT_FUNC)();
 
 #ifdef I_OS_WIN32
-        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr(new char[codeLength]), machineCodeIndex(0) { }
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr(VirtualAlloc(NULL, sizeof(codeLength), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
 #else
         MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((char *) mmap(
                 NULL,
@@ -98,7 +101,7 @@ namespace MAsmJit {
         }
         ~MAsmJit() {
 #ifdef I_OS_WIN32
-            delete[] machineCodeAdr;
+            VirtualFree(pByte, codeLength, MEM_RELEASE);
 #else
             munmap(machineCodeAdr, codeLength);
 #endif
