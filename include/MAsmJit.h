@@ -30,9 +30,9 @@ namespace MAsmJit {
         typedef void (*JIT_FUNC)();
 
 #ifdef I_OS_WIN32
-        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr(VirtualAlloc(NULL, sizeof(codeLength), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((uint8_t*)VirtualAlloc(NULL, sizeof(codeLength), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE)), machineCodeIndex(0) { }
 #else
-        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((unsigned char *) mmap(
+        MAsmJit(size_t cl = 1024) : codeLength(cl), machineCodeAdr((uint8_t*) mmap(
                 NULL,
                 codeLength,
                 PROT_READ | PROT_WRITE | PROT_EXEC,
@@ -95,12 +95,18 @@ namespace MAsmJit {
             auto func = (JIT_FUNC) machineCodeAdr;
             func();
         }
+        template <class Func>
+        decltype(auto) run_as(){
+            MAJ_APP = 0xc3;
+            auto func = (Func*)machineCodeAdr;
+            return func();
+        }
         void clear() {
             machineCodeIndex = 0;
         }
         ~MAsmJit() {
 #ifdef I_OS_WIN32
-            VirtualFree(pByte, 0, MEM_RELEASE);
+            VirtualFree(machineCodeAdr, 0, MEM_RELEASE);
 #else
             munmap(machineCodeAdr, codeLength);
 #endif
@@ -108,7 +114,7 @@ namespace MAsmJit {
     private:
         size_t machineCodeIndex;
         size_t codeLength;
-        unsigned char *machineCodeAdr;
+        uint8_t *machineCodeAdr;
     };
 }
 
