@@ -101,7 +101,7 @@ namespace MAsmJit {
         }
         ~MAsmJit() {
 #ifdef I_OS_WIN32
-            VirtualFree(pByte, codeLength, MEM_RELEASE);
+            VirtualFree(pByte, 0, MEM_RELEASE);
 #else
             munmap(machineCodeAdr, codeLength);
 #endif
