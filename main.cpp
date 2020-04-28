@@ -1,5 +1,4 @@
 #include <MAsmJit.h>
-#include <iostream>
 
 int main(int argc, char *argv[]) {
     MAsmJit::MAsmJit mAsmJit;
