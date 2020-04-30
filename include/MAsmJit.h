@@ -91,20 +91,20 @@ namespace MAsmJit {
             for (auto& i : il) MAJ_APP_64(i)
         }
 
-        void run() {
-            MAJ_APP = 0xc3;// ret, MUSTN'T lose it!!! Otherwise, you will not be able to return to the place where the machine code is called
+        void run(bool addRet = true) {
+            if (addRet) MAJ_APP = 0xc3;// ret, MUSTN'T lose it!!! Otherwise, you will not be able to return to the place where the machine code is called
             auto func = (JIT_FUNC) machineCodeAdr;
             func();
         }
         template <class Func>
-        decltype(auto) run_as() {
-            MAJ_APP = 0xc3;
+        decltype(auto) run_as(bool addRet = true) {
+            if (addRet) MAJ_APP = 0xc3;
             auto func = (Func*)machineCodeAdr;
             return func();
         }
         template <class Func, class ...Args>
-        decltype(auto) run_as(Args&& ...args) {
-            MAJ_APP = 0xc3;
+        decltype(auto) run_as(bool addRet = true, Args&& ...args) {
+            if (addRet) MAJ_APP = 0xc3;
             auto func = (Func*)machineCodeAdr;
             return func(std::forward<Args>(args)...);
         }
