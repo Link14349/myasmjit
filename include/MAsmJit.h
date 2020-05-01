@@ -78,6 +78,21 @@ namespace MAsmJit {
             // Note, low byte order!
             MAJ_APP_64(source)
         }
+        void cmp(REG64BIT reg, uint64_t source) {
+            MAJ_APP = 0x48;
+            if (reg == RAX) {
+                MAJ_APP = 0x3d;
+                MAJ_APP_64(source)
+                return;
+            }
+            MAJ_APP = 0x81;
+            switch (reg) {
+                case RBX: MAJ_APP = 0xfb; break;
+                case RCX: MAJ_APP = 0xf9; break;
+                case RDX: MAJ_APP = 0xfa; break;
+            }
+            MAJ_APP_64(source)
+        }
         void db(std::initializer_list<uint8_t> il) {
             for (auto& i : il) MAJ_APP_8(i)
         }
