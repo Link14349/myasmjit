@@ -130,6 +130,26 @@ namespace MAsmJit {
             MAJ_APP = 0x7e;
             MAJ_APP = offset;
         }
+        void addq(REG64BIT reg, uint32_t val) {
+            MAJ_APP = 0x48;
+            switch (reg) {
+                case RAX:
+                    MAJ_APP = 0x05;
+                    goto ADD_SOURCE;
+                case RBX:
+                    MAJ_APP = 0x81;
+                    MAJ_APP = 0xc3;
+                    goto ADD_SOURCE;
+                case RCX:
+                    MAJ_APP = 0x81;
+                    MAJ_APP = 0xc1;
+                    goto ADD_SOURCE;
+                case RDX:
+                    MAJ_APP = 0x81;
+                    MAJ_APP = 0xc2;
+                    ADD_SOURCE: MAJ_APP_32(val)
+            }
+        }
         void db(std::initializer_list<uint8_t> il) {
             for (auto& i : il) MAJ_APP_8(i)
         }
