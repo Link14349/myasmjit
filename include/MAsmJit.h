@@ -102,6 +102,34 @@ namespace MAsmJit {
         void ret() {
             MAJ_APP = 0xc3;
         }
+        void jmp(uint8_t offset) {
+            MAJ_APP = 0xeb;
+            MAJ_APP = offset;
+        }
+        void je(uint8_t offset) {
+            MAJ_APP = 0x74;
+            MAJ_APP = offset;
+        }
+        void jne(uint8_t offset) {
+            MAJ_APP = 0x75;
+            MAJ_APP = offset;
+        }
+        void jg(uint8_t offset) {
+            MAJ_APP = 0x7f;
+            MAJ_APP = offset;
+        }
+        void jge(uint8_t offset) {
+            MAJ_APP = 0x7d;
+            MAJ_APP = offset;
+        }
+        void jl(uint8_t offset) {
+            MAJ_APP = 0x7c;
+            MAJ_APP = offset;
+        }
+        void jle(uint8_t offset) {
+            MAJ_APP = 0x7e;
+            MAJ_APP = offset;
+        }
         void db(std::initializer_list<uint8_t> il) {
             for (auto& i : il) MAJ_APP_8(i)
         }
