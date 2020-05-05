@@ -45,44 +45,49 @@ namespace MAsmJit {
 #endif
 
 #define MAJ_APP_8(source) MAJ_APP = source;
-#define MAJ_APP_16(source) { MAJ_APP = source >> 8; \
-        MAJ_APP = source & 0xff; }
-#define MAJ_APP_32(source) { MAJ_APP = source >> 24; \
-        MAJ_APP = (source >> 16) & 0xff; \
+#define MAJ_APP_16(source) { MAJ_APP = source & 0xff; MAJ_APP = source >> 8;}
+#define MAJ_APP_32(source) { MAJ_APP = source & 0xff; MAJ_APP = (source >> 8) & 0xff; MAJ_APP = (source >> 16) & 0xff; MAJ_APP = source >> 24; }
+#define MAJ_APP_64(source) { MAJ_APP = source & 0xff; \
         MAJ_APP = (source >> 8) & 0xff; \
-        MAJ_APP = source & 0xff; }
-#define MAJ_APP_64(source) { MAJ_APP = source >> 56; \
-        MAJ_APP = (source >> 48) & 0xff; \
-        MAJ_APP = (source >> 40) & 0xff; \
-        MAJ_APP = (source >> 32) & 0xff; \
+        MAJ_APP = (source >> 16) & 0xff; \
         MAJ_APP = (source >> 24) & 0xff; \
-        MAJ_APP = (source >> 16) & 0xff; \
-        MAJ_APP = (source >> 8) & 0xff; \
-        MAJ_APP = source & 0xff; }
+        MAJ_APP = (source >> 32) & 0xff; \
+        MAJ_APP = (source >> 40) & 0xff; \
+        MAJ_APP = (source >> 48) & 0xff; \
+        MAJ_APP = source >> 56; }
+#define MASMJIT_SIZE_NORM(NAME, SIZE) uint8_t sizeof_##NAME() { return SIZE; }
+        MASMJIT_SIZE_NORM(movb, 2)
         void movb(REG8BIT reg, uint8_t source) {
             MAJ_APP = reg;
             MAJ_APP_8(source)
         }
+        MASMJIT_SIZE_NORM(movw, 4)
         void movw(REG16BIT reg, uint16_t source) {
             MAJ_APP = 0x66;
             MAJ_APP = reg;
             MAJ_APP_16(source)
         }
+        MASMJIT_SIZE_NORM(movl, 5)
         void movl(REG32BIT reg, uint32_t source) {
             MAJ_APP = reg;
             MAJ_APP_32(source)
         }
+        MASMJIT_SIZE_NORM(movq, 10)
         void movq(REG64BIT reg, uint64_t source) {
             MAJ_APP = 0x48;
             MAJ_APP = reg;
             // Note, low byte order!
             MAJ_APP_64(source)
         }
-        void cmp(REG64BIT reg, uint64_t source) {
+        uint8_t sizeof_cmp(REG64BIT reg) {
+            if (reg == RAX) return 6;
+            return 7;
+        }
+        void cmp(REG64BIT reg, uint32_t source) {
             MAJ_APP = 0x48;
             if (reg == RAX) {
                 MAJ_APP = 0x3d;
-                MAJ_APP_64(source)
+                MAJ_APP_32(source)
                 return;
             }
             MAJ_APP = 0x81;
@@ -91,50 +96,70 @@ namespace MAsmJit {
                 case RCX: MAJ_APP = 0xf9; break;
                 case RDX: MAJ_APP = 0xfa; break;
             }
-            MAJ_APP_64(source)
+            MAJ_APP_32(source)
         }
+        MASMJIT_SIZE_NORM(movb_to_rbp, 7)
         void movb_to_rbp(uint32_t offset, uint8_t val) {
             MAJ_APP = 0xc6;
             MAJ_APP = 0x85;
             MAJ_APP_32(offset)
             MAJ_APP = val;
         }
+        MASMJIT_SIZE_NORM(movl_to_rbp, 10)
         void movl_to_rbp(uint32_t offset, uint32_t val) {
             MAJ_APP = 0xc7;
             MAJ_APP = 0x85;
             MAJ_APP_32(offset)
             MAJ_APP_32(val)
         }
+        MASMJIT_SIZE_NORM(ret, 1)
         void ret() {
             MAJ_APP = 0xc3;
         }
+#define MASMJIT_JMP_B_SIZE(NAME) MASMJIT_SIZE_NORM(NAME, 2)
+        MASMJIT_JMP_B_SIZE(jmp)
         void jmp(uint8_t offset) {
             MAJ_APP = 0xeb;
             MAJ_APP = offset;
         }
+        MASMJIT_SIZE_NORM(jmp32, 5)
+        void jmp(uint32_t offset) {
+            MAJ_APP = 0xe9;
+            MAJ_APP_32(offset)
+        }
+        MASMJIT_JMP_B_SIZE(je)
         void je(uint8_t offset) {
             MAJ_APP = 0x74;
             MAJ_APP = offset;
         }
+        MASMJIT_JMP_B_SIZE(jne)
         void jne(uint8_t offset) {
             MAJ_APP = 0x75;
             MAJ_APP = offset;
         }
+        MASMJIT_JMP_B_SIZE(jg)
         void jg(uint8_t offset) {
             MAJ_APP = 0x7f;
             MAJ_APP = offset;
         }
+        MASMJIT_JMP_B_SIZE(jge)
         void jge(uint8_t offset) {
             MAJ_APP = 0x7d;
             MAJ_APP = offset;
         }
+        MASMJIT_JMP_B_SIZE(jl)
         void jl(uint8_t offset) {
             MAJ_APP = 0x7c;
             MAJ_APP = offset;
         }
+        MASMJIT_JMP_B_SIZE(jle)
         void jle(uint8_t offset) {
             MAJ_APP = 0x7e;
             MAJ_APP = offset;
+        }
+        uint8_t sizeof_addq(REG64BIT reg) {
+            if (reg == RAX) return 6;
+            return 7;
         }
         void addq(REG64BIT reg, uint32_t val) {
             MAJ_APP = 0x48;
@@ -156,6 +181,23 @@ namespace MAsmJit {
                     ADD_SOURCE: MAJ_APP_32(val)
             }
         }
+        uint8_t sizeof_movabsq_to_rcx() { return 10; }
+        void movabsq_to_rcx(uint64_t adr) {
+            MAJ_APP = 0x48;
+            MAJ_APP = 0xb9;
+            MAJ_APP_64(adr);
+        }
+        uint8_t sizeof_mov_to_rcx_adr() { return 3; }
+        void mov_to_rcx_adr(REG64BIT reg) {
+            MAJ_APP = 0x48;
+            MAJ_APP = 0x89;
+            switch (reg) {
+                case RAX: MAJ_APP = 0x01; break;
+                case RBX: MAJ_APP = 0x19; break;
+                case RCX: MAJ_APP = 0x09; break;
+                case RDX: MAJ_APP = 0x0a; break;
+            }
+        }
         void db(std::initializer_list<uint8_t> il) {
             for (auto& i : il) MAJ_APP_8(i)
         }
@@ -173,6 +215,7 @@ namespace MAsmJit {
             if (addRet) MAJ_APP = 0xc3;// ret, MUSTN'T lose it!!! Otherwise, you will not be able to return to the place where the machine code is called
             auto func = (JIT_FUNC) machineCodeAdr;
             func();
+            asm("nop");
         }
         template <class Func>
         decltype(auto) run_as(bool addRet = true) {
@@ -184,6 +227,20 @@ namespace MAsmJit {
         decltype(auto) run_as(bool addRet = true, Args&& ...args) {
             if (addRet) MAJ_APP = 0xc3;
             auto func = (Func*)machineCodeAdr;
+            return func(std::forward<Args>(args)...);
+        }
+        void runAI() {// AI: add index
+            auto func = (JIT_FUNC) (machineCodeAdr + machineCodeIndex);
+            func();
+        }
+        template <class Func>
+        decltype(auto) runAI_as() {
+            auto func = (Func*)(machineCodeAdr + machineCodeIndex);
+            return func();
+        }
+        template <class Func, class ...Args>
+        decltype(auto) runAI_as(Args&& ...args) {
+            auto func = (Func*)(machineCodeAdr + machineCodeIndex);
             return func(std::forward<Args>(args)...);
         }
         void clear() {
