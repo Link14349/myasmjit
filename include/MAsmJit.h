@@ -93,6 +93,9 @@ namespace MAsmJit {
             }
             MAJ_APP_64(source)
         }
+        void ret() {
+            MAJ_APP = 0xc3;
+        }
         void db(std::initializer_list<uint8_t> il) {
             for (auto& i : il) MAJ_APP_8(i)
         }
