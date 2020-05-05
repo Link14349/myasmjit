@@ -93,6 +93,12 @@ namespace MAsmJit {
             }
             MAJ_APP_64(source)
         }
+        void movl_to_rbp(uint32_t offset, uint32_t val) {
+            MAJ_APP = 0xc7;
+            MAJ_APP = 0x85;
+            MAJ_APP_32(offset)
+            MAJ_APP_32(val)
+        }
         void ret() {
             MAJ_APP = 0xc3;
         }
